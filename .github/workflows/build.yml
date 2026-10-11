@@ -1,5 +1,7 @@
 name: build
-on: [push]
+on:
+  push:
+  workflow_dispatch:
 jobs:
   package:
     strategy:
@@ -12,5 +14,22 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm run dist
+      - name: Verify Big Sur DMG
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          dmg="$(find release -maxdepth 1 -name '*.dmg' -print -quit)"
+          app="$(find release -maxdepth 3 -type d -name 'Lined Notebook.app' -print -quit)"
+          test -n "$dmg"
+          test -n "$app"
+          hdiutil verify "$dmg"
+          test "$(plutil -extract LSMinimumSystemVersion raw "$app/Contents/Info.plist")" = "11.0"
+          archs="$(lipo -archs "$app/Contents/MacOS/Lined Notebook")"
+          [[ "$archs" == *x86_64* ]]
+          [[ "$archs" == *arm64* ]]
       - uses: actions/upload-artifact@v4
-        with: { name: lined-notebook-${{ matrix.os }}, path: release/* }
+        with:
+          name: lined-notebook-${{ matrix.os }}
+          path: release/*
+          if-no-files-found: error

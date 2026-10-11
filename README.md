@@ -42,7 +42,7 @@ To uninstall the app, open **Settings → Apps → Installed apps**, find **Line
 
 ### macOS
 
-The macOS artifact is a universal build for both Apple Silicon and Intel Macs.
+The macOS artifact supports macOS 11 Big Sur or newer and is a universal build for both Apple Silicon and Intel Macs.
 
 1. Open the extracted `.dmg` file.
 2. Drag **Lined Notebook** into the Applications folder.
@@ -50,7 +50,7 @@ The macOS artifact is a universal build for both Apple Silicon and Intel Macs.
 4. Control-click **Lined Notebook** and choose **Open**.
 5. Choose **Open** again in the security dialog.
 
-If macOS blocks the app without offering an Open button, go to **System Settings → Privacy & Security**, locate the message about Lined Notebook, and choose **Open Anyway**.
+If Big Sur blocks the app without offering an Open button, open **System Preferences → Security & Privacy → General**, locate the message about Lined Notebook, and choose **Open Anyway**. On newer macOS versions, use **System Settings → Privacy & Security** instead.
 
 The warning appears because the app is not signed or notarized. Only bypass it for a build downloaded from this project's own GitHub Actions page or built yourself.
 
@@ -104,7 +104,7 @@ Open the notebook and select **Export PDF** in the top toolbar. Choose a filenam
 - Node.js 22 or newer
 - npm 10 or newer
 - Git
-- Windows 10/11 or a recent version of macOS
+- Windows 10/11 or macOS 11 Big Sur or newer
 
 Clone the repository, install dependencies, and start the development build:
 
@@ -131,6 +131,8 @@ npx playwright install chromium
 ```
 
 Packaging must be run on the target operating system. Run `npm run dist` on Windows to produce an NSIS installer, or on macOS to produce the universal DMG. Output is written to `release/`.
+
+Big Sur compatibility requires Electron 37.10.3, the final Electron 37 release. Electron 38 and newer require macOS 12 Monterey, and Electron 37 is no longer maintained upstream. This is an intentional compatibility tradeoff for macOS 11 users.
 
 ## Privacy and data
 

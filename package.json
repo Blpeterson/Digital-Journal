@@ -43,7 +43,7 @@
     "@vitejs/plugin-react": "^5.1.0",
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
-    "electron": "^39.1.1",
+    "electron": "37.10.3",
     "electron-builder": "^26.0.12",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
@@ -62,15 +62,37 @@
       "package.json"
     ],
     "extraResources": [
-      { "from": "packages/assets/LICENSES.md", "to": "licenses/ASSETS.md" },
-      { "from": "node_modules/@fontsource/lora/LICENSE", "to": "licenses/fonts/Lora-OFL.txt" },
-      { "from": "node_modules/@fontsource/nunito/LICENSE", "to": "licenses/fonts/Nunito-OFL.txt" },
-      { "from": "node_modules/@fontsource/atkinson-hyperlegible/LICENSE", "to": "licenses/fonts/Atkinson-Hyperlegible-OFL.txt" },
-      { "from": "node_modules/@fontsource/caveat/LICENSE", "to": "licenses/fonts/Caveat-OFL.txt" },
-      { "from": "node_modules/@fontsource/dancing-script/LICENSE", "to": "licenses/fonts/Dancing-Script-OFL.txt" },
-      { "from": "node_modules/@fontsource/pacifico/LICENSE", "to": "licenses/fonts/Pacifico-OFL.txt" }
+      {
+        "from": "packages/assets/LICENSES.md",
+        "to": "licenses/ASSETS.md"
+      },
+      {
+        "from": "node_modules/@fontsource/lora/LICENSE",
+        "to": "licenses/fonts/Lora-OFL.txt"
+      },
+      {
+        "from": "node_modules/@fontsource/nunito/LICENSE",
+        "to": "licenses/fonts/Nunito-OFL.txt"
+      },
+      {
+        "from": "node_modules/@fontsource/atkinson-hyperlegible/LICENSE",
+        "to": "licenses/fonts/Atkinson-Hyperlegible-OFL.txt"
+      },
+      {
+        "from": "node_modules/@fontsource/caveat/LICENSE",
+        "to": "licenses/fonts/Caveat-OFL.txt"
+      },
+      {
+        "from": "node_modules/@fontsource/dancing-script/LICENSE",
+        "to": "licenses/fonts/Dancing-Script-OFL.txt"
+      },
+      {
+        "from": "node_modules/@fontsource/pacifico/LICENSE",
+        "to": "licenses/fonts/Pacifico-OFL.txt"
+      }
     ],
     "mac": {
+      "minimumSystemVersion": "11.0",
       "target": [
         {
           "target": "dmg",
@@ -80,6 +102,9 @@
         }
       ],
       "category": "public.app-category.productivity"
+    },
+    "dmg": {
+      "artifactName": "${productName}-${version}-macOS-11-universal.${ext}"
     },
     "win": {
       "target": "nsis"
