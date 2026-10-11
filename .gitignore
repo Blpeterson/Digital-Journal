@@ -1,6 +1,7 @@
 node_modules/
 dist/
 release/
+release-update/
 test-results/
 playwright-report/
 *.lnb

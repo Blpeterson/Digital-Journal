@@ -77,7 +77,8 @@ Use **Open notebook** on the shelf to open an existing `.lnb` file.
 
 ### Add decorations
 
-- Select a sticker or stamp from the tray above the notebook.
+- Select a sticker or stamp from the tray, then click the page where it should be placed.
+- Drag a placed decoration to move it.
 - Double-click a decoration to delete it.
 - Use **Undo** and **Redo** for text and decoration changes.
 
