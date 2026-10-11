@@ -1,9 +1,9 @@
 import { app } from 'electron'
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, readdir, rename, stat, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { randomBytes, scrypt as scryptCallback, createCipheriv, createDecipheriv } from 'node:crypto'
 import { promisify } from 'node:util'
-import { notebookSchema, type Notebook } from '../../packages/schema'
+import { notebookSchema, type Notebook, type NotebookSummary } from '../../packages/schema'
 
 const scrypt = promisify(scryptCallback)
 const MAGIC = 'LNB1'
@@ -43,5 +43,25 @@ export async function saveNotebook(notebook: Notebook, passcode?: string) {
   return target
 }
 export async function loadNotebook(path: string, passcode?: string) { return decode(await readFile(path, 'utf8'), passcode) }
+
+export async function listNotebooks(): Promise<{ directory: string; notebooks: NotebookSummary[] }> {
+  const directory = libraryPath()
+  await mkdir(directory, { recursive: true })
+  const entries = await readdir(directory, { withFileTypes: true })
+  const summaries = await Promise.all(entries.filter(entry => entry.isFile() && entry.name.endsWith('.lnb')).map(async (entry): Promise<NotebookSummary | null> => {
+    const path = join(directory, entry.name)
+    try {
+      const [raw, details] = await Promise.all([readFile(path, 'utf8'), stat(path)])
+      const envelope = JSON.parse(raw) as Envelope
+      if (envelope.magic !== MAGIC) return null
+      if (envelope.encrypted) return { path, id: entry.name.slice(0, -4), title: 'Locked notebook', modifiedAt: details.mtime.toISOString(), encrypted: true } satisfies NotebookSummary
+      const notebook = await decode(raw)
+      return { path, id: notebook.id, title: notebook.title, pageCount: notebook.pageCount, modifiedAt: notebook.modifiedAt || details.mtime.toISOString(), encrypted: false, cover: notebook.cover } satisfies NotebookSummary
+    } catch { return null }
+  }))
+  const notebooks: NotebookSummary[] = summaries.filter((summary): summary is NotebookSummary => summary !== null)
+  notebooks.sort((a, b) => b.modifiedAt.localeCompare(a.modifiedAt))
+  return { directory, notebooks }
+}
 
 export const cryptoForTests = { encode, decode }

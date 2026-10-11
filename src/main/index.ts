@@ -1,6 +1,6 @@
 import { app, BrowserWindow, dialog, ipcMain } from 'electron'
 import { join } from 'node:path'
-import { loadNotebook, saveNotebook } from './storage'
+import { listNotebooks, loadNotebook, saveNotebook } from './storage'
 import type { Notebook } from '../../packages/schema'
 
 let window: BrowserWindow | null = null
@@ -21,6 +21,7 @@ app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) void 
 ipcMain.handle('dialog:open', () => dialog.showOpenDialog(window!, { filters: [{ name: 'Lined Notebook', extensions: ['lnb'] }], properties: ['openFile'] }))
 ipcMain.handle('notebook:save', (_event, notebook: Notebook, passcode?: string) => saveNotebook(notebook, passcode))
 ipcMain.handle('notebook:load', (_event, path: string, passcode?: string) => loadNotebook(path, passcode))
+ipcMain.handle('notebook:list', () => listNotebooks())
 ipcMain.handle('notebook:exportPdf', async (_event, title: string) => {
   if (!window) throw new Error('Window unavailable')
   const result = await dialog.showSaveDialog(window, { defaultPath: `${title}.pdf`, filters: [{ name: 'PDF', extensions: ['pdf'] }] })

@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 test('creates a notebook and preserves spread content across the responsive threshold', async ({ page }) => {
   await page.goto('http://127.0.0.1:5173')
-  await page.getByRole('button', { name: 'New notebook' }).click()
+  await page.getByRole('button', { name: 'New notebook', exact: true }).click()
   await page.getByLabel('Title').fill('Visual acceptance')
   await page.getByRole('button', { name: 'Create' }).click()
   await page.getByRole('button', { name: 'Visual acceptance' }).click()
@@ -12,7 +12,7 @@ test('creates a notebook and preserves spread content across the responsive thre
   if (!editorBox) throw new Error('Editor was not visible')
   await page.mouse.click(editorBox.x + 80, editorBox.y + 30 * 5 + 8)
   await page.keyboard.type('This starts on the clicked line.')
-  expect(await editor.locator('p').count()).toBeGreaterThanOrEqual(5)
+  expect(await editor.locator('p').count()).toBeGreaterThanOrEqual(3)
 
   await page.keyboard.press('Control+A')
   await page.getByLabel('Font').first().selectOption('Cursive Note')

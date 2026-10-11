@@ -17,6 +17,12 @@
     "dist": "npm run build && electron-builder"
   },
   "dependencies": {
+    "@fontsource/atkinson-hyperlegible": "^5.3.0",
+    "@fontsource/caveat": "^5.3.0",
+    "@fontsource/dancing-script": "^5.3.0",
+    "@fontsource/lora": "^5.3.0",
+    "@fontsource/nunito": "^5.3.0",
+    "@fontsource/pacifico": "^5.3.0",
     "@tiptap/extension-color": "^3.7.2",
     "@tiptap/extension-text-style": "^3.7.2",
     "@tiptap/extension-underline": "^3.7.2",
@@ -50,9 +56,35 @@
   "build": {
     "appId": "org.opensource.linednotebook",
     "productName": "Lined Notebook",
-    "files": ["dist/**/*", "package.json"],
-    "mac": { "target": [{ "target": "dmg", "arch": ["universal"] }], "category": "public.app-category.productivity" },
-    "win": { "target": "nsis" },
-    "directories": { "output": "release" }
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      { "from": "packages/assets/LICENSES.md", "to": "licenses/ASSETS.md" },
+      { "from": "node_modules/@fontsource/lora/LICENSE", "to": "licenses/fonts/Lora-OFL.txt" },
+      { "from": "node_modules/@fontsource/nunito/LICENSE", "to": "licenses/fonts/Nunito-OFL.txt" },
+      { "from": "node_modules/@fontsource/atkinson-hyperlegible/LICENSE", "to": "licenses/fonts/Atkinson-Hyperlegible-OFL.txt" },
+      { "from": "node_modules/@fontsource/caveat/LICENSE", "to": "licenses/fonts/Caveat-OFL.txt" },
+      { "from": "node_modules/@fontsource/dancing-script/LICENSE", "to": "licenses/fonts/Dancing-Script-OFL.txt" },
+      { "from": "node_modules/@fontsource/pacifico/LICENSE", "to": "licenses/fonts/Pacifico-OFL.txt" }
+    ],
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "category": "public.app-category.productivity"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "directories": {
+      "output": "release"
+    }
   }
 }

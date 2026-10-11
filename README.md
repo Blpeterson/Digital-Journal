@@ -14,7 +14,7 @@ The app currently targets Windows and macOS. Builds are unsigned, so both operat
 - Protect a notebook with AES-256-GCM passcode encryption.
 - Export a notebook to PDF.
 
-Notebook files are stored locally in your Documents folder under `Lined Notebooks`. Copy the `.lnb` files somewhere safe to back them up.
+Notebook files are stored locally in your Documents folder under `Lined Notebooks`. On Windows with OneDrive-managed Documents, this is commonly `C:\Users\<you>\OneDrive\Documents\Lined Notebooks`. The exact active location is displayed above the notebook covers on the shelf. Copy the `.lnb` files somewhere safe to back them up.
 
 > **Important:** An encrypted notebook cannot be recovered if you forget its passcode.
 
@@ -65,11 +65,11 @@ To uninstall the app, move **Lined Notebook** from Applications to the Trash. Yo
 3. Select **Create**.
 4. Click the closed notebook to open it.
 
-Use **Open notebook** on the shelf to open an existing `.lnb` file.
+Saved notebooks automatically appear as cover cards on the shelf, with the most recently updated first. Select a cover to reopen it. Use **Open file** to open an `.lnb` file stored outside the normal library folder.
 
 ### Write and navigate
 
-- Click a page and begin typing.
+- Click any ruled line on a page and begin typing there.
 - Use the formatting bar above the active page for bold, italic, underline, headings, lists, and text color.
 - Use the left and right page-edge buttons or the arrow keys to turn pages.
 - When the final ruled line is occupied, the page displays **Page full** and stops accepting additional content.
@@ -88,6 +88,7 @@ Some advanced decoration controls described in the product plan—such as resize
 
 - Select **Cover** to change the material, cover color, spine color, and label.
 - Select **Settings** to change paper, line, margin, text, and desk colors; ruling type; font; and animation preference.
+- Six bundled open-license typefaces are available, including serif, readable sans, handwriting, connected cursive, and curvy script styles. The page formatting bar applies a font to selected text; Settings changes the notebook default.
 - In Settings, enter a passcode of at least four characters and select **Enable encryption** to encrypt the notebook file.
 
 The app autosaves shortly after every change. There is no separate Save command.
