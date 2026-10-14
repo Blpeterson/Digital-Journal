@@ -12,21 +12,23 @@ export const FONT_PROFILES = {
 } as const
 
 export const transformSchema = z.object({
-  id: z.string(), assetId: z.string(), x: z.number(), y: z.number(), rotation: z.number(), scale: z.number().positive(), z: z.number(), tint: z.string().optional(),
+  id: z.string(), assetId: z.string(), x: z.number(), y: z.number(), rotation: z.number(), scale: z.number().positive(), z: z.number(), tint: z.string().optional(), locked: z.boolean().optional().default(false),
 })
 export const stampSchema = transformSchema.omit({ tint: true }).extend({ inkColor: z.string(), seed: z.number() })
 export const photoSchema = transformSchema.omit({ assetId: true, tint: true }).extend({
-  dataUrl: z.string().startsWith('data:image/'), name: z.string().max(255),
+  dataUrl: z.string().startsWith('data:image/'), name: z.string().max(255), frame: z.enum(['plain', 'polaroid', 'tape', 'shadow']).default('plain'),
+  filter: z.enum(['none', 'mono', 'sepia']).default('none'), fit: z.enum(['crop', 'contain']).default('crop'), cropX: z.number().min(0).max(100).default(50), cropY: z.number().min(0).max(100).default(50), caption: z.string().max(120).optional(),
 })
+export const drawingSchema = z.object({ id: z.string(), tool: z.enum(['pen', 'highlighter']), color: z.string(), width: z.number().positive(), opacity: z.number().min(0).max(1), points: z.array(z.object({ x: z.number(), y: z.number() })).min(2) })
 export const pageSchema = z.object({
-  index: z.number().int().nonnegative(), content: z.any(), stickers: z.array(transformSchema), stamps: z.array(stampSchema), photos: z.array(photoSchema).default([]),
+  index: z.number().int().nonnegative(), content: z.any(), stickers: z.array(transformSchema), stamps: z.array(stampSchema), photos: z.array(photoSchema).default([]), drawings: z.array(drawingSchema).default([]), bookmarked: z.boolean().default(false), template: z.enum(['standard', 'checklist', 'weekly', 'habit', 'cornell', 'music', 'sketch']).default('standard'), tabLabel: z.string().max(18).optional(), dividerColor: z.string().optional(),
 })
 export const notebookStyleSchema = z.object({
-  paperColor: z.string(), ruling: z.enum(['lined', 'dotted', 'grid', 'blank']), rulingHeight: z.number().min(20).max(48), rulingColor: z.string(), marginLine: z.string(), defaultTextColor: z.string(), defaultFont: z.string(), deskBackground: z.string(),
+  paperColor: z.string(), paperTexture: z.enum(['clean', 'fiber', 'parchment', 'speckled']).default('clean'), ruling: z.enum(['lined', 'dotted', 'grid', 'blank']), rulingHeight: z.number().min(20).max(48), rulingColor: z.string(), marginLine: z.string(), defaultTextColor: z.string(), defaultFont: z.string(), deskBackground: z.string(),
 })
 export const coverSchema = z.object({
   material: z.enum(['cloth', 'leather', 'paper']), color: z.string(), texture: z.string(), spineColor: z.string(), band: z.string().optional(),
-  label: z.object({ text: z.string(), font: z.string(), color: z.string() }), stickers: z.array(transformSchema), stamps: z.array(stampSchema),
+  label: z.object({ text: z.string(), font: z.string(), color: z.string() }), stickers: z.array(transformSchema), stamps: z.array(stampSchema), photos: z.array(photoSchema).default([]),
 })
 export const notebookSummarySchema = z.object({
   path: z.string(), id: z.string(), title: z.string(), pageCount: z.number().int().optional(), modifiedAt: z.string(), encrypted: z.boolean(), cover: coverSchema.optional(),
@@ -42,6 +44,7 @@ export type Page = z.infer<typeof pageSchema>
 export type StickerInstance = z.infer<typeof transformSchema>
 export type StampInstance = z.infer<typeof stampSchema>
 export type PhotoInstance = z.infer<typeof photoSchema>
+export type DrawingStroke = z.infer<typeof drawingSchema>
 export type NotebookSummary = z.infer<typeof notebookSummarySchema>
 
 export function createNotebook(title: string, pageCount: number, rulingHeight: number, paperColor: string): Notebook {
@@ -50,9 +53,9 @@ export function createNotebook(title: string, pageCount: number, rulingHeight: n
   const emptyContent = { type: 'doc', content: [{ type: 'paragraph' }] }
   return notebookSchema.parse({
     version: 1, id, title, pageCount, pageSize: 'standard', createdAt: now, modifiedAt: now,
-    style: { paperColor, ruling: 'lined', rulingHeight, rulingColor: '#93abc2', marginLine: '#d99292', defaultTextColor: '#292725', defaultFont: 'Notebook Serif', deskBackground: '#463a31' },
-    cover: { material: 'cloth', color: '#385a72', texture: 'woven', spineColor: '#294353', label: { text: title, font: 'Notebook Serif', color: '#292725' }, stickers: [], stamps: [] },
-    pages: Array.from({ length: pageCount }, (_, index) => ({ index, content: structuredClone(emptyContent), stickers: [], stamps: [], photos: [] })),
+    style: { paperColor, paperTexture: 'clean', ruling: 'lined', rulingHeight, rulingColor: '#93abc2', marginLine: '#d99292', defaultTextColor: '#292725', defaultFont: 'Notebook Serif', deskBackground: '#463a31' },
+    cover: { material: 'cloth', color: '#385a72', texture: 'woven', spineColor: '#294353', label: { text: title, font: 'Notebook Serif', color: '#292725' }, stickers: [], stamps: [], photos: [] },
+    pages: Array.from({ length: pageCount }, (_, index) => ({ index, content: structuredClone(emptyContent), stickers: [], stamps: [], photos: [], drawings: [] })),
   })
 }
 

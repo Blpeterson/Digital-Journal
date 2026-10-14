@@ -5,7 +5,10 @@ contextBridge.exposeInMainWorld('notebookAPI', {
   save: (notebook: unknown, passcode?: string) => ipcRenderer.invoke('notebook:save', notebook, passcode),
   load: (path: string, passcode?: string) => ipcRenderer.invoke('notebook:load', path, passcode),
   list: () => ipcRenderer.invoke('notebook:list'),
-  exportPdf: (title: string, notebook: unknown) => ipcRenderer.invoke('notebook:exportPdf', title, notebook),
+  listRecoveries: () => ipcRenderer.invoke('recovery:list'),
+  restoreRecovery: (id: string) => ipcRenderer.invoke('recovery:restore', id),
+  backupCopy: (notebook: unknown, passcode?: string) => ipcRenderer.invoke('notebook:backupCopy', notebook, passcode),
+  exportPdf: (title: string, notebook: unknown, options: unknown) => ipcRenderer.invoke('notebook:exportPdf', title, notebook, options),
   choosePhoto: () => ipcRenderer.invoke('photo:choose'),
   printNotebook: () => ipcRenderer.invoke('print:notebook'),
 })

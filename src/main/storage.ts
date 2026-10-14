@@ -92,4 +92,58 @@ export async function listNotebooks(): Promise<{ directory: string; notebooks: N
   return { directory, notebooks }
 }
 
+export type RecoverySummary = { id: string; title: string; path: string; modifiedAt: string; encrypted: boolean }
+
+export async function listRecoveries(): Promise<RecoverySummary[]> {
+  const directory = libraryPath()
+  await mkdir(directory, { recursive: true })
+  const entries = await readdir(directory, { withFileTypes: true })
+  const recoveries = await Promise.all(entries.filter(entry => entry.isFile() && entry.name.endsWith('.lnb.backup')).map(async entry => {
+    const path = join(directory, entry.name)
+    try {
+      const [raw, details] = await Promise.all([readFile(path, 'utf8'), stat(path)])
+      const envelope = JSON.parse(raw) as Envelope
+      if (envelope.magic !== MAGIC) return null
+      const id = entry.name.slice(0, -'.lnb.backup'.length)
+      if (envelope.encrypted) return { id, title: 'Locked notebook recovery', path, modifiedAt: details.mtime.toISOString(), encrypted: true }
+      const notebook = await decode(raw)
+      return { id, title: notebook.title, path, modifiedAt: details.mtime.toISOString(), encrypted: false }
+    } catch { return null }
+  }))
+  return recoveries.filter((item): item is RecoverySummary => item !== null).sort((a, b) => b.modifiedAt.localeCompare(a.modifiedAt))
+}
+
+export async function restoreRecovery(id: string) {
+  if (!/^[a-zA-Z0-9-]+$/.test(id)) throw new Error('Invalid notebook recovery identifier')
+  const target = notebookPath(id)
+  const backup = `${target}.backup`
+  const raw = await readFile(backup, 'utf8')
+  const envelope = JSON.parse(raw) as Envelope
+  if (envelope.magic !== MAGIC) throw new Error('Recovery copy is invalid')
+  const preserved = `${target}.before-restore-${Date.now()}`
+  try { await copyFile(target, preserved) } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error }
+  const temp = `${target}.${process.pid}.${randomBytes(6).toString('hex')}.restore.tmp`
+  await copyFile(backup, temp)
+  await rename(temp, target)
+  return target
+}
+
+export async function writeNotebookCopy(path: string, notebook: Notebook, passcode?: string) {
+  const parsed = notebookSchema.parse(notebook)
+  const temp = `${path}.${process.pid}.${randomBytes(6).toString('hex')}.tmp`
+  let handle
+  try {
+    handle = await open(temp, 'wx', 0o600)
+    await handle.writeFile(await encode(parsed, passcode), 'utf8')
+    await handle.sync(); await handle.close(); handle = undefined
+    await decode(await readFile(temp, 'utf8'), passcode)
+    await rename(temp, path)
+    return path
+  } catch (error) {
+    if (handle) await handle.close().catch(() => undefined)
+    await unlink(temp).catch(() => undefined)
+    throw error
+  }
+}
+
 export const cryptoForTests = { encode, decode }

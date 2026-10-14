@@ -21,7 +21,7 @@ describe('encrypted notebook envelope', () => {
 
   it('serializes overlapping saves and leaves a verified recovery copy', async () => {
     process.env.LNB_TEST_DOCUMENTS = await mkdtemp(join(tmpdir(), 'lined-notebook-save-'))
-    const { saveNotebook, loadNotebook } = await import('./storage')
+    const { saveNotebook, loadNotebook, listRecoveries, restoreRecovery } = await import('./storage')
     const first = createNotebook('First title', 20, RULING_HEIGHTS.college, '#ffffff')
     const second = { ...first, title: 'Second title', modifiedAt: new Date(Date.now() + 1000).toISOString() }
     const third = { ...second, title: 'Final title', modifiedAt: new Date(Date.now() + 2000).toISOString() }
@@ -29,5 +29,8 @@ describe('encrypted notebook envelope', () => {
     await expect(loadNotebook(paths[2])).resolves.toMatchObject({ title: 'Final title' })
     expect(await readdir(join(process.env.LNB_TEST_DOCUMENTS, 'Lined Notebooks'))).toContain(`${first.id}.lnb.backup`)
     expect(await readFile(paths[2], 'utf8')).not.toHaveLength(0)
+    await expect(listRecoveries()).resolves.toEqual([expect.objectContaining({ id: first.id, title: 'Second title' })])
+    await restoreRecovery(first.id)
+    await expect(loadNotebook(paths[2])).resolves.toMatchObject({ title: 'Second title' })
   })
 })

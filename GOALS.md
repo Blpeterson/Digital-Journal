@@ -59,3 +59,15 @@
 - The decoration tray has additional original Unicode-based stickers and stamps. Placed decorations and locally embedded photos have manual 15-degree rotation controls.
 - Photo placement was added at the user's explicit direction, overriding the earlier no-photos scope note. Photos remain entirely local and are embedded in the `.lnb` file; no sync or network feature was added.
 - No new runtime dependency was required for save recovery, PDF rendering, decoration rotation, or photos.
+
+## 2026 notebook feature expansion
+
+- Recovery Center lists verified `.lnb.backup` files and restores them while preserving the current file as a timestamped pre-restore copy.
+- Decorations support resize, manual rotation, layer changes, duplication, locking, deletion, and keyboard movement. Photos add crop/fit, crop focus, four frames, filters, and captions.
+- Page thumbnails, persistent visual bookmarks, section tabs, colored dividers, clear/duplicate/reorder controls, and seven page templates were added without search or tags. Fixed page counts remain enforced.
+- Front-cover stickers, stamps, and photos render consistently on the shelf, closed notebook, designer, and PDF cover.
+- Pen, translucent highlighter, and stroke eraser tools store vector points in the notebook and print with the page.
+- PDF export supports page ranges, optional covers, A4/Letter output, tags, and an outline. Portable `.lnb` backup copies use the same verified write path.
+- Presentation mode, optional generated page-turn audio, high contrast, 80–140% zoom, keyboard movement, and screen-reader decoration labels improve presentation and accessibility.
+- Paper textures and richer writing controls (numbered lists, quotes, dividers, checkboxes, date headings) remain schema-backed or editor-schema-native.
+- No dependencies or third-party assets were added for this expansion. OS-specific filesystem and print operations remain behind preload/main-process interfaces.

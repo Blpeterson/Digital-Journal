@@ -10,6 +10,9 @@ The app currently targets Windows and macOS. Builds are unsigned, so both operat
 - Choose narrow, college, or wide ruling.
 - Write with headings, bullet lists, bold, italic, underline, fonts, and colors.
 - Decorate pages with built-in stickers, stamps, and locally embedded photos; move and rotate them on the page.
+- Draw with a pen or translucent highlighter and erase individual strokes.
+- Navigate with page thumbnails, bookmarks, section tabs, and colored dividers.
+- Choose notes, checklist, weekly planner, habit tracker, Cornell, music, or sketch page layouts.
 - Customize the cover, paper, ruling, margin, text, and desk colors.
 - Protect a notebook with AES-256-GCM passcode encryption.
 - Export a notebook to PDF.
@@ -82,7 +85,11 @@ Saved notebooks automatically appear as cover cards on the shelf, with the most 
 - Double-click a decoration to delete it.
 - Use **Undo** and **Redo** for text and decoration changes.
 
-Hover or focus a placed decoration and use the curved-arrow controls to rotate it in 15-degree steps. Photos selected with **Photo** are embedded directly in the local notebook file. Resize, duplication, and layer ordering are still under development.
+Hover or focus a placed decoration to reveal its editing controls. Photos selected with **Photo** are embedded directly in the local notebook file.
+
+The decoration controls also resize, reorder, duplicate, lock, and delete items. Photo controls cycle frames and filters, switch between crop and fit, adjust crop focus, and add captions. Keyboard users can focus a decoration, move it with the arrow keys, use Shift for larger steps, and press Delete to remove it.
+
+Use **Pages** for thumbnails, bookmarks, page reordering, duplication, clearing, section tabs, and divider colors. Page count never changes. The page formatting bar selects a page template and provides numbered lists, quotes, dividers, checkboxes, and date headings.
 
 ### Customize and lock a notebook
 
@@ -96,6 +103,7 @@ The app autosaves shortly after every change and shows its save state in the tit
 ### Export a PDF
 
 Open the notebook and select **Export PDF** in the top toolbar. Choose a filename and location when prompted. The PDF contains the front cover, every notebook page, and the back cover.
+The export dialog can limit the page range, omit covers, and choose A4 or US Letter. Settings can save a validated portable `.lnb` backup copy. The shelf’s Recovery Center can restore the previous verified autosave.
 
 ## Build and run from source
 
