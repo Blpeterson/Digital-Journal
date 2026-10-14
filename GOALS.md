@@ -50,3 +50,12 @@
 ## Goal 9 — stretch
 
 - Not attempted. The flat animation remains behind the animation setting as planned.
+
+## 2026 platform, reliability, and polish hand-off
+
+- Supported desktop targets are now Windows 10/11 and macOS 26/27. The macOS deployment target is isolated in `package.json` (`build.mac.minimumSystemVersion`); runtime platform behavior remains behind Electron/main-process IPC interfaces. Electron 42 replaces the unsupported Electron 37 line.
+- Saves for each notebook are serialized. Each save uses a unique same-directory temporary file, flushes and validates it before replacement, retains the previous file as `.lnb.backup`, and verifies the installed file. The editor shows saving/saved/failure state and keeps the open notebook in memory after failure.
+- PDF export uses a separate, non-interactive A4 print renderer and includes the front cover, every fixed page, and the back cover. It waits for fonts and every page editor before printing.
+- The decoration tray has additional original Unicode-based stickers and stamps. Placed decorations and locally embedded photos have manual 15-degree rotation controls.
+- Photo placement was added at the user's explicit direction, overriding the earlier no-photos scope note. Photos remain entirely local and are embedded in the `.lnb` file; no sync or network feature was added.
+- No new runtime dependency was required for save recovery, PDF rendering, decoration rotation, or photos.

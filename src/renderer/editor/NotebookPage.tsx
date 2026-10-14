@@ -5,7 +5,7 @@ import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import { Color } from '@tiptap/extension-color'
 import { TextStyle } from '@tiptap/extension-text-style'
-import { FONT_PROFILES, PAGE_SIZE, lineCapacity, type StampInstance, type StickerInstance } from '@schema'
+import { FONT_PROFILES, PAGE_SIZE, lineCapacity, type PhotoInstance, type StampInstance, type StickerInstance } from '@schema'
 import { useNotebook } from '../store'
 import { GLYPHS } from '../App'
 
@@ -25,7 +25,7 @@ const FontFamily = Extension.create({
   },
 })
 
-export function NotebookPage({ pageIndex, right = false }: { pageIndex: number; right?: boolean }) {
+export function NotebookPage({ pageIndex, right = false, print = false }: { pageIndex: number; right?: boolean; print?: boolean }) {
   const notebook = useNotebook(s => s.notebook)!
   const updatePage = useNotebook(s => s.updatePage)
   const placementTool = useNotebook(s => s.placementTool)
@@ -133,7 +133,7 @@ export function NotebookPage({ pageIndex, right = false }: { pageIndex: number; 
     onPointerDownCapture={event => { placeDecoration(event) }}
     onMouseDownCapture={chooseRuledLine}
   >
-    <div className="editor-tools no-print">
+    {!print && <div className="editor-tools no-print">
       {['b', 'i', 'u', 'h', 'l'].map(action => <button key={action} onClick={() => format(action)}>{action === 'l' ? '• List' : action.toUpperCase()}</button>)}
       <select aria-label="Font" defaultValue="" onChange={event => {
         const family = FONT_PROFILES[event.target.value as keyof typeof FONT_PROFILES]?.family
@@ -143,10 +143,10 @@ export function NotebookPage({ pageIndex, right = false }: { pageIndex: number; 
         {Object.keys(FONT_PROFILES).map(font => <option key={font} value={font}>{font}</option>)}
       </select>
       <input aria-label="Text color" type="color" value={notebook.style.defaultTextColor} onChange={event => editor?.chain().focus().setColor(event.target.value).run()} />
-    </div>
+    </div>}
     <EditorContent editor={editor} />
     <div className="decorations">
-      {[...page.stickers, ...page.stamps].map(item => <Decoration key={item.id} pageIndex={pageIndex} item={item} />)}
+      {[...page.stickers, ...page.stamps, ...(page.photos ?? [])].map(item => <Decoration key={item.id} pageIndex={pageIndex} item={item} print={print} />)}
       {placementTool && preview && <span className={`placement-preview ${placementTool.kind}`} style={{ left: `${preview.x / PAGE_SIZE.width * 100}%`, top: `${preview.y / PAGE_SIZE.height * 100}%` }}>{GLYPHS[placementTool.assetId]}</span>}
     </div>
     {full && <span className="full-notice no-print">Page full</span>}
@@ -154,7 +154,7 @@ export function NotebookPage({ pageIndex, right = false }: { pageIndex: number; 
   </article>
 }
 
-function Decoration({ pageIndex, item }: { pageIndex: number; item: StickerInstance | StampInstance }) {
+function Decoration({ pageIndex, item, print = false }: { pageIndex: number; item: StickerInstance | StampInstance | PhotoInstance; print?: boolean }) {
   const update = useNotebook(s => s.updateDecoration)
   const remove = useNotebook(s => s.removeDecoration)
   const [position, setPosition] = useState({ x: item.x, y: item.y })
@@ -162,12 +162,14 @@ function Decoration({ pageIndex, item }: { pageIndex: number; item: StickerInsta
 
   useEffect(() => setPosition({ x: item.x, y: item.y }), [item.x, item.y])
 
+  const isPhoto = 'dataUrl' in item
   return <button
-    className={'inkColor' in item ? 'decoration stamp' : 'decoration sticker'}
+    className={isPhoto ? 'decoration photo' : 'inkColor' in item ? 'decoration stamp' : 'decoration sticker'}
     title="Drag to move · double-click to delete"
     style={{ left: `${position.x / PAGE_SIZE.width * 100}%`, top: `${position.y / PAGE_SIZE.height * 100}%`, transform: `translate(-50%,-50%) rotate(${item.rotation}deg) scale(${item.scale})`, zIndex: item.z, color: 'inkColor' in item ? item.inkColor : undefined }}
-    onDoubleClick={() => remove(pageIndex, item.id)}
+    onDoubleClick={() => !print && remove(pageIndex, item.id)}
     onPointerDown={event => {
+      if (print) return
       event.stopPropagation()
       const rect = event.currentTarget.closest('.notebook-page')!.getBoundingClientRect()
       drag.current = { pointerX: event.clientX, pointerY: event.clientY, x: position.x, y: position.y, width: rect.width, height: rect.height }
@@ -187,5 +189,5 @@ function Decoration({ pageIndex, item }: { pageIndex: number; item: StickerInsta
       drag.current = undefined
       update(pageIndex, item.id, position)
     }}
-  >{GLYPHS[item.assetId] ?? '✦'}</button>
+  >{isPhoto ? <img src={item.dataUrl} alt={item.name} /> : GLYPHS[item.assetId] ?? '✦'}{!print && <span className="decoration-controls"><span onPointerDown={event => { event.stopPropagation(); update(pageIndex, item.id, { rotation: item.rotation - 15 }) }}>↶</span><span onPointerDown={event => { event.stopPropagation(); update(pageIndex, item.id, { rotation: item.rotation + 15 }) }}>↷</span></span>}</button>
 }

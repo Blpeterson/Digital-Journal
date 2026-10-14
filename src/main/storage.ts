@@ -1,5 +1,5 @@
 import { app } from 'electron'
-import { mkdir, readFile, readdir, rename, stat, writeFile } from 'node:fs/promises'
+import { copyFile, mkdir, open, readFile, readdir, rename, stat, unlink } from 'node:fs/promises'
 import { join } from 'node:path'
 import { randomBytes, scrypt as scryptCallback, createCipheriv, createDecipheriv } from 'node:crypto'
 import { promisify } from 'node:util'
@@ -11,6 +11,7 @@ type Envelope = { magic: typeof MAGIC; encrypted: boolean; salt?: string; iv?: s
 
 export function libraryPath() { return join(app.getPath('documents'), 'Lined Notebooks') }
 export function notebookPath(id: string) { return join(libraryPath(), `${id}.lnb`) }
+const saveQueues = new Map<string, Promise<string>>()
 
 async function encode(notebook: Notebook, passcode?: string): Promise<string> {
   const json = JSON.stringify(notebook)
@@ -35,12 +36,39 @@ async function decode(raw: string, passcode?: string): Promise<Notebook> {
   } catch { throw new Error('INVALID_PASSCODE') }
 }
 
-export async function saveNotebook(notebook: Notebook, passcode?: string) {
+async function saveNotebookNow(notebook: Notebook, passcode?: string) {
   await mkdir(libraryPath(), { recursive: true })
-  const target = notebookPath(notebook.id), temp = `${target}.tmp`
-  await writeFile(temp, await encode(notebookSchema.parse(notebook), passcode), { encoding: 'utf8', flag: 'w' })
-  await rename(temp, target)
+  const parsed = notebookSchema.parse(notebook)
+  const target = notebookPath(parsed.id)
+  const temp = `${target}.${process.pid}.${randomBytes(6).toString('hex')}.tmp`
+  const backup = `${target}.backup`
+  const encoded = await encode(parsed, passcode)
+  let handle
+  try {
+    handle = await open(temp, 'wx', 0o600)
+    await handle.writeFile(encoded, 'utf8')
+    await handle.sync()
+    await handle.close()
+    handle = undefined
+    await decode(await readFile(temp, 'utf8'), passcode)
+    try { await copyFile(target, backup) } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error }
+    await rename(temp, target)
+    const saved = await decode(await readFile(target, 'utf8'), passcode)
+    if (saved.id !== parsed.id || saved.modifiedAt !== parsed.modifiedAt) throw new Error('Saved notebook verification failed')
+  } catch (error) {
+    if (handle) await handle.close().catch(() => undefined)
+    await unlink(temp).catch(() => undefined)
+    const detail = error instanceof Error ? error.message : String(error)
+    throw new Error(`Unable to save safely. Your open notebook is still in memory. ${detail}`)
+  }
   return target
+}
+export function saveNotebook(notebook: Notebook, passcode?: string) {
+  const previous = saveQueues.get(notebook.id) ?? Promise.resolve('')
+  const next = previous.catch(() => '').then(() => saveNotebookNow(notebook, passcode))
+  saveQueues.set(notebook.id, next)
+  void next.finally(() => { if (saveQueues.get(notebook.id) === next) saveQueues.delete(notebook.id) }).catch(() => undefined)
+  return next
 }
 export async function loadNotebook(path: string, passcode?: string) { return decode(await readFile(path, 'utf8'), passcode) }
 

@@ -15,7 +15,12 @@ export const transformSchema = z.object({
   id: z.string(), assetId: z.string(), x: z.number(), y: z.number(), rotation: z.number(), scale: z.number().positive(), z: z.number(), tint: z.string().optional(),
 })
 export const stampSchema = transformSchema.omit({ tint: true }).extend({ inkColor: z.string(), seed: z.number() })
-export const pageSchema = z.object({ index: z.number().int().nonnegative(), content: z.any(), stickers: z.array(transformSchema), stamps: z.array(stampSchema) })
+export const photoSchema = transformSchema.omit({ assetId: true, tint: true }).extend({
+  dataUrl: z.string().startsWith('data:image/'), name: z.string().max(255),
+})
+export const pageSchema = z.object({
+  index: z.number().int().nonnegative(), content: z.any(), stickers: z.array(transformSchema), stamps: z.array(stampSchema), photos: z.array(photoSchema).default([]),
+})
 export const notebookStyleSchema = z.object({
   paperColor: z.string(), ruling: z.enum(['lined', 'dotted', 'grid', 'blank']), rulingHeight: z.number().min(20).max(48), rulingColor: z.string(), marginLine: z.string(), defaultTextColor: z.string(), defaultFont: z.string(), deskBackground: z.string(),
 })
@@ -36,6 +41,7 @@ export type NotebookStyle = z.infer<typeof notebookStyleSchema>
 export type Page = z.infer<typeof pageSchema>
 export type StickerInstance = z.infer<typeof transformSchema>
 export type StampInstance = z.infer<typeof stampSchema>
+export type PhotoInstance = z.infer<typeof photoSchema>
 export type NotebookSummary = z.infer<typeof notebookSummarySchema>
 
 export function createNotebook(title: string, pageCount: number, rulingHeight: number, paperColor: string): Notebook {
@@ -46,7 +52,7 @@ export function createNotebook(title: string, pageCount: number, rulingHeight: n
     version: 1, id, title, pageCount, pageSize: 'standard', createdAt: now, modifiedAt: now,
     style: { paperColor, ruling: 'lined', rulingHeight, rulingColor: '#93abc2', marginLine: '#d99292', defaultTextColor: '#292725', defaultFont: 'Notebook Serif', deskBackground: '#463a31' },
     cover: { material: 'cloth', color: '#385a72', texture: 'woven', spineColor: '#294353', label: { text: title, font: 'Notebook Serif', color: '#292725' }, stickers: [], stamps: [] },
-    pages: Array.from({ length: pageCount }, (_, index) => ({ index, content: structuredClone(emptyContent), stickers: [], stamps: [] })),
+    pages: Array.from({ length: pageCount }, (_, index) => ({ index, content: structuredClone(emptyContent), stickers: [], stamps: [], photos: [] })),
   })
 }
 

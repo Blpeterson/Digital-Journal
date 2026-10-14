@@ -9,7 +9,7 @@ The app currently targets Windows and macOS. Builds are unsigned, so both operat
 - Create notebooks containing 20–100 fixed pages.
 - Choose narrow, college, or wide ruling.
 - Write with headings, bullet lists, bold, italic, underline, fonts, and colors.
-- Decorate pages with built-in stickers and stamps.
+- Decorate pages with built-in stickers, stamps, and locally embedded photos; move and rotate them on the page.
 - Customize the cover, paper, ruling, margin, text, and desk colors.
 - Protect a notebook with AES-256-GCM passcode encryption.
 - Export a notebook to PDF.
@@ -42,7 +42,7 @@ To uninstall the app, open **Settings → Apps → Installed apps**, find **Line
 
 ### macOS
 
-The macOS artifact supports macOS 11 Big Sur or newer and is a universal build for both Apple Silicon and Intel Macs.
+The macOS artifact targets macOS 26 and 27 and is a universal build for both Apple Silicon and Intel Macs. Older macOS releases are intentionally unsupported.
 
 1. Open the extracted `.dmg` file.
 2. Drag **Lined Notebook** into the Applications folder.
@@ -82,7 +82,7 @@ Saved notebooks automatically appear as cover cards on the shelf, with the most 
 - Double-click a decoration to delete it.
 - Use **Undo** and **Redo** for text and decoration changes.
 
-Some advanced decoration controls described in the product plan—such as resize, manual rotation, duplication, and layer ordering—are still under development.
+Hover or focus a placed decoration and use the curved-arrow controls to rotate it in 15-degree steps. Photos selected with **Photo** are embedded directly in the local notebook file. Resize, duplication, and layer ordering are still under development.
 
 ### Customize and lock a notebook
 
@@ -91,11 +91,11 @@ Some advanced decoration controls described in the product plan—such as resize
 - Six bundled open-license typefaces are available, including serif, readable sans, handwriting, connected cursive, and curvy script styles. The page formatting bar applies a font to selected text; Settings changes the notebook default.
 - In Settings, enter a passcode of at least four characters and select **Enable encryption** to encrypt the notebook file.
 
-The app autosaves shortly after every change. There is no separate Save command.
+The app autosaves shortly after every change and shows its save state in the title bar. Saves are serialized, verified before replacement, and retain a recovery `.lnb.backup` copy of the previous version. There is no separate Save command.
 
 ### Export a PDF
 
-Open the notebook and select **Export PDF** in the top toolbar. Choose a filename and location when prompted.
+Open the notebook and select **Export PDF** in the top toolbar. Choose a filename and location when prompted. The PDF contains the front cover, every notebook page, and the back cover.
 
 ## Build and run from source
 
@@ -104,7 +104,7 @@ Open the notebook and select **Export PDF** in the top toolbar. Choose a filenam
 - Node.js 22 or newer
 - npm 10 or newer
 - Git
-- Windows 10/11 or macOS 11 Big Sur or newer
+- Windows 10/11 or macOS 26/27
 
 Clone the repository, install dependencies, and start the development build:
 
@@ -132,7 +132,7 @@ npx playwright install chromium
 
 Packaging must be run on the target operating system. Run `npm run dist` on Windows to produce an NSIS installer, or on macOS to produce the universal DMG. Output is written to `release/`.
 
-Big Sur compatibility requires Electron 37.10.3, the final Electron 37 release. Electron 38 and newer require macOS 12 Monterey, and Electron 37 is no longer maintained upstream. This is an intentional compatibility tradeoff for macOS 11 users.
+The app uses the maintained Electron 42 line and intentionally sets a macOS 26 deployment minimum. Windows packaging is labeled for Windows 10/11; Linux packaging is not supported.
 
 ## Privacy and data
 

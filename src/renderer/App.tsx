@@ -3,7 +3,10 @@ import { FONT_PROFILES, RULING_HEIGHTS, type Notebook, type NotebookSummary } fr
 import { useNotebook } from './store'
 import { NotebookPage } from './editor/NotebookPage'
 
-export const GLYPHS: Record<string, string> = { flower: '✿', star: '★', heart: '♥', leaf: '❧', approved: 'APPROVED', date: 'TODAY', spark: '✦' }
+export const GLYPHS: Record<string, string> = {
+  flower: '✿', star: '★', heart: '♥', leaf: '❧', butterfly: '❦', moon: '☾', sun: '☀', music: '♫',
+  approved: 'APPROVED', date: 'TODAY', spark: '✦', important: 'IMPORTANT', done: 'DONE', idea: 'IDEA', smile: '☺',
+}
 
 function useSinglePage() {
   const [single, setSingle] = useState(() => matchMedia('(max-width: 900px)').matches)
@@ -24,6 +27,7 @@ export function App() {
   const [cover, setCover] = useState(false)
   const [lockedPath, setLockedPath] = useState<string>()
   const [error, setError] = useState('')
+  const [saveState, setSaveState] = useState<'saved' | 'saving' | 'error'>('saved')
   const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const notebookId = state.notebook?.id
   const turnPages = state.turn
@@ -31,7 +35,8 @@ export function App() {
   useEffect(() => {
     if (!state.notebook) return
     clearTimeout(saveTimer.current)
-    saveTimer.current = setTimeout(() => window.notebookAPI.save(state.notebook!, state.passcode).catch((reason: Error) => setError(reason.message)), 350)
+    setSaveState('saving')
+    saveTimer.current = setTimeout(() => window.notebookAPI.save(state.notebook!, state.passcode).then(() => setSaveState('saved')).catch((reason: Error) => { setSaveState('error'); setError(reason.message) }), 500)
     return () => clearTimeout(saveTimer.current)
   }, [state.notebook, state.passcode])
 
@@ -85,13 +90,13 @@ export function App() {
   return <main className={`desk ${state.open ? 'is-open' : ''}`} style={{ '--desk': notebook.style.deskBackground } as React.CSSProperties}>
     <header className="appbar no-print">
       <button className="ghost" onClick={goToShelf}>Shelf</button>
-      <strong>{notebook.title}</strong>
+      <strong>{notebook.title} <small className={`save-status ${saveState}`}>{saveState === 'saved' ? 'Saved' : saveState === 'saving' ? 'Saving…' : 'Save failed'}</small></strong>
       <nav>
         <button className="ghost" onClick={state.undo}>Undo</button>
         <button className="ghost" onClick={state.redo}>Redo</button>
         <button className="ghost" onClick={() => setCover(true)}>Cover</button>
         <button className="ghost" onClick={() => setSettings(true)}>Settings</button>
-        <button className="ghost" onClick={() => window.notebookAPI.exportPdf(notebook.title)}>Export PDF</button>
+        <button className="ghost" onClick={async () => { try { await window.notebookAPI.exportPdf(notebook.title, notebook) } catch (reason) { setError((reason as Error).message) } }}>Export PDF</button>
       </nav>
     </header>
     {error && <div className="toast">{error}<button onClick={() => setError('')}>×</button></div>}
@@ -155,7 +160,14 @@ function ClosedNotebook({ notebook, open }: { notebook: Notebook; open(): void }
 function Toolbar() {
   const state = useNotebook()
   const choose = (assetId: string, kind: 'sticker' | 'stamp') => state.selectPlacement(state.placementTool?.assetId === assetId ? null : { assetId, kind })
-  return <aside className="toolbar no-print"><span>{state.placementTool ? 'Click a page to place' : 'Stickers'}</span>{['flower', 'star', 'heart', 'leaf'].map(asset => <button className={state.placementTool?.assetId === asset ? 'active' : ''} key={asset} onClick={() => choose(asset, 'sticker')}>{GLYPHS[asset]}</button>)}<i /><span>Stamps</span>{['approved', 'date', 'spark'].map(asset => <button className={`stamp-button ${state.placementTool?.assetId === asset ? 'active' : ''}`} key={asset} onClick={() => choose(asset, 'stamp')}>{GLYPHS[asset]}</button>)}{state.placementTool && <button onClick={() => state.selectPlacement(null)}>Cancel</button>}</aside>
+  async function addPhoto() {
+    try {
+      const photo = await window.notebookAPI.choosePhoto()
+      if (!photo) return
+      state.addPhoto(state.pageIndex, { id: crypto.randomUUID(), ...photo, x: 360, y: 480, rotation: 0, scale: 1, z: Date.now() })
+    } catch (reason) { alert((reason as Error).message) }
+  }
+  return <aside className="toolbar no-print"><span>{state.placementTool ? 'Click a page to place' : 'Stickers'}</span>{['flower', 'star', 'heart', 'leaf', 'butterfly', 'moon', 'sun', 'music'].map(asset => <button aria-label={asset} className={state.placementTool?.assetId === asset ? 'active' : ''} key={asset} onClick={() => choose(asset, 'sticker')}>{GLYPHS[asset]}</button>)}<i /><span>Stamps</span>{['approved', 'date', 'spark', 'important', 'done', 'idea', 'smile'].map(asset => <button aria-label={asset} className={`stamp-button ${state.placementTool?.assetId === asset ? 'active' : ''}`} key={asset} onClick={() => choose(asset, 'stamp')}>{GLYPHS[asset]}</button>)}<i /><button className="photo-button" onClick={addPhoto}>＋ Photo</button>{state.placementTool && <button onClick={() => state.selectPlacement(null)}>Cancel</button>}</aside>
 }
 
 function Settings({ close }: { close(): void }) {
@@ -173,4 +185,15 @@ function Cover({ close }: { close(): void }) {
 function Unlock({ path, cancel }: { path: string; cancel(): void }) {
   const [passcode, setPasscode] = useState(''), [error, setError] = useState(''), setNotebook = useNotebook(state => state.setNotebook)
   return <main className="desk"><form className="panel lock-panel" onSubmit={async event => { event.preventDefault(); try { setNotebook(await window.notebookAPI.load(path, passcode), passcode) } catch { setError('That passcode did not unlock this notebook.') } }}><div className="lock-icon">⌾</div><h2>Notebook locked</h2><input autoFocus type="password" value={passcode} onChange={event => setPasscode(event.target.value)} placeholder="Passcode" />{error && <p className="error">{error}</p>}<button>Unlock</button><button type="button" className="secondary" onClick={cancel}>Cancel</button></form></main>
+}
+
+export function PrintApp() {
+  const [notebook, setNotebook] = useState<Notebook | null>(null)
+  useEffect(() => { void window.notebookAPI.printNotebook().then(value => { if (value) { useNotebook.getState().setNotebook(value); setNotebook(value) } }) }, [])
+  if (!notebook) return <main className="print-loading">Preparing notebook…</main>
+  return <main className="print-document">
+    <section className={`print-cover front material-${notebook.cover.material}`} style={{ '--cover': notebook.cover.color, '--spine': notebook.cover.spineColor } as React.CSSProperties}><span className="print-spine"/><span className="cover-label" style={{ color: notebook.cover.label.color }}>{notebook.cover.label.text}</span></section>
+    {notebook.pages.map(page => <NotebookPage key={page.index} pageIndex={page.index} print />)}
+    <section className={`print-cover back material-${notebook.cover.material}`} style={{ '--cover': notebook.cover.color, '--spine': notebook.cover.spineColor } as React.CSSProperties}><span className="print-spine"/></section>
+  </main>
 }

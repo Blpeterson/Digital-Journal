@@ -44,7 +44,7 @@
     "@vitejs/plugin-react": "^5.1.0",
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
-    "electron": "37.10.3",
+    "electron": "^42.11.14",
     "electron-builder": "^26.0.12",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
@@ -93,7 +93,7 @@
       }
     ],
     "mac": {
-      "minimumSystemVersion": "11.0",
+      "minimumSystemVersion": "26.0",
       "target": [
         {
           "target": "dmg",
@@ -105,10 +105,11 @@
       "category": "public.app-category.productivity"
     },
     "dmg": {
-      "artifactName": "${productName}-${version}-macOS-11-universal.${ext}"
+      "artifactName": "${productName}-${version}-macOS-26-27-universal.${ext}"
     },
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "artifactName": "${productName}-${version}-Windows-10-11.${ext}"
     },
     "directories": {
       "output": "release"

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { createNotebook, type Notebook, type NotebookStyle, type Page, type StickerInstance, type StampInstance } from '@schema'
+import { createNotebook, type Notebook, type NotebookStyle, type Page, type PhotoInstance, type StickerInstance, type StampInstance } from '@schema'
 
 type Snapshot = { pages: Page[]; cover: Notebook['cover'] }
 type History = Snapshot[]
@@ -8,7 +8,7 @@ type State = {
   notebook: Notebook | null; open: boolean; pageIndex: number; turnDirection: 'next' | 'previous'; animations: boolean; selectedId: string | null; placementTool: PlacementTool; passcode?: string; history: History; future: History;
   createNew(title: string, count: number, rulingHeight: number, paperColor: string): void; setNotebook(n: Notebook, passcode?: string): void;
   updatePage(index: number, patch: Partial<Page>): void; updateStyle(patch: Partial<NotebookStyle>): void; updateCover(patch: Partial<Notebook['cover']>): void;
-  addSticker(index: number, item: StickerInstance): void; addStamp(index: number, item: StampInstance): void; updateDecoration(index: number, id: string, patch: Partial<StickerInstance | StampInstance>): void; removeDecoration(index: number, id: string): void; selectPlacement(tool: PlacementTool): void;
+  addSticker(index: number, item: StickerInstance): void; addStamp(index: number, item: StampInstance): void; addPhoto(index: number, item: PhotoInstance): void; updateDecoration(index: number, id: string, patch: Partial<StickerInstance | StampInstance | PhotoInstance>): void; removeDecoration(index: number, id: string): void; selectPlacement(tool: PlacementTool): void;
   turn(direction: number, singlePage?: boolean): void; undo(): void; redo(): void;
 }
 const snapshot = (n: Notebook): Snapshot => ({ pages: structuredClone(n.pages), cover: structuredClone(n.cover) })
@@ -21,8 +21,9 @@ export const useNotebook = create<State>((set, get) => ({
   updateCover: (patch) => set((s) => s.notebook ? ({ history: [...s.history.slice(-49), snapshot(s.notebook)], future: [], notebook: { ...s.notebook, cover: { ...s.notebook.cover, ...patch }, modifiedAt: new Date().toISOString() } }) : s),
   addSticker: (index, item) => get().updatePage(index, { stickers: [...(get().notebook?.pages[index].stickers ?? []), item] }),
   addStamp: (index, item) => get().updatePage(index, { stamps: [...(get().notebook?.pages[index].stamps ?? []), item] }),
-  updateDecoration: (index, id, patch) => { const p = get().notebook?.pages[index]; if (p) get().updatePage(index, { stickers: p.stickers.map(x => x.id === id ? { ...x, ...patch } : x), stamps: p.stamps.map(x => x.id === id ? { ...x, ...patch } : x) }) },
-  removeDecoration: (index, id) => { const p = get().notebook?.pages[index]; if (p) get().updatePage(index, { stickers: p.stickers.filter(x => x.id !== id), stamps: p.stamps.filter(x => x.id !== id) }) },
+  addPhoto: (index, item) => get().updatePage(index, { photos: [...(get().notebook?.pages[index].photos ?? []), item] }),
+  updateDecoration: (index, id, patch) => { const p = get().notebook?.pages[index]; if (p) get().updatePage(index, { stickers: p.stickers.map(x => x.id === id ? { ...x, ...patch } : x), stamps: p.stamps.map(x => x.id === id ? { ...x, ...patch } : x), photos: (p.photos ?? []).map(x => x.id === id ? { ...x, ...patch } as PhotoInstance : x) }) },
+  removeDecoration: (index, id) => { const p = get().notebook?.pages[index]; if (p) get().updatePage(index, { stickers: p.stickers.filter(x => x.id !== id), stamps: p.stamps.filter(x => x.id !== id), photos: (p.photos ?? []).filter(x => x.id !== id) }) },
   selectPlacement: (placementTool) => set({ placementTool }),
   turn: (direction, singlePage = false) => set((s) => {
     const pageCount = s.notebook?.pageCount ?? 1
